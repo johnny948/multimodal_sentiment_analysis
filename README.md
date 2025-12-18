@@ -87,7 +87,7 @@ multimodal-sentiment-analysis/
 
 - Python 3.9 or higher
 - 4GB+ RAM (for model loading)
-- CUDA-capable GPU (optional, for faster inference)
+- CUDA-capable GPU (optional, for the faster inference)
 
 ### Setup
 
