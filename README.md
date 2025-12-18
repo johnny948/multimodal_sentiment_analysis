@@ -2,6 +2,10 @@
 
 A comprehensive multimodal sentiment analysis system that combines fine-tuned Wav2Vec2 (audio) and ResNet-50 (vision) models using attention-based fusion. The project includes a production-ready Streamlit web application for real-time sentiment analysis across multiple input modalities.
 
+**Note: Some training notebooks may not render correctly in GitHub preview due to widget metadata compatibility issues. Please download and open them locally using Jupyter Notebook if needed.**
+
+
+
 ## Overview
 
 This project implements state-of-the-art multimodal sentiment analysis by:
