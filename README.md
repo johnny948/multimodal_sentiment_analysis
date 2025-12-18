@@ -1,197 +1,264 @@
----
-title: Multimodal Sentiment Analysis
-emoji: 🧠
-colorFrom: blue
-colorTo: purple
-sdk: streamlit
-sdk_version: "1.48.1"
-app_file: app.py
-pinned: false
----
-
 # Multimodal Sentiment Analysis
 
-A comprehensive Streamlit application that combines three different sentiment analysis models: text, audio, and vision-based sentiment analysis. The project demonstrates how to integrate multiple AI models for comprehensive sentiment understanding across different modalities.
+A comprehensive multimodal sentiment analysis system that combines fine-tuned Wav2Vec2 (audio) and ResNet-50 (vision) models using attention-based fusion. The project includes a production-ready Streamlit web application for real-time sentiment analysis across multiple input modalities.
 
-![Demo GIF](https://github.com/user-attachments/assets/ac6ed8dc-e225-44a8-a6f1-c2d6b318adf4)
+## Overview
 
-## What is it?
+This project implements state-of-the-art multimodal sentiment analysis by:
 
-This project implements a **fused sentiment analysis system** that combines predictions from three independent models:
+- **Single-Modal Models**: Fine-tuned Wav2Vec2-base for audio and ResNet-50 for vision sentiment analysis
+- **Multimodal Fusion**: Attention-based fusion mechanism with Softmax normalization for adaptive modality weighting
+- **Production System**: Complete Streamlit web application with multiple input methods and real-time inference
 
-### 1. Text Sentiment Analysis
+## Key Features
 
-- **Model**: TextBlob NLP library
-- **Capability**: Analyzes text input for positive, negative, or neutral sentiment
-- **Status**: ✅ Fully integrated and ready to use
+### Models
 
-### 2. Audio Sentiment Analysis
+1. **Audio Sentiment Analysis**
+   - Model: Fine-tuned Wav2Vec2-base (`facebook/wav2vec2-base`)
+   - Training: Two-stage fine-tuning on RAVDESS dataset
+   - Performance: 79.17% accuracy on RAVDESS test set
+   - Features: Automatic preprocessing (16kHz sampling, 5s max duration)
 
-- **Model**: Fine-tuned Wav2Vec2-base model
-- **Training Data**: RAVDESS + CREMA-D emotional speech datasets
-- **Capability**: Analyzes audio files and microphone recordings for sentiment
-- **Features**:
-  - File upload support (WAV, MP3, M4A, FLAC)
-  - Direct microphone recording (max 5 seconds)
-  - Automatic preprocessing (16kHz sampling, 5s max duration)
-- **Status**: ✅ Fully integrated and ready to use
+2. **Vision Sentiment Analysis**
+   - Model: Fine-tuned ResNet-50 (ImageNet pre-trained)
+   - Training: End-to-end fine-tuning on RAVDESS frames
+   - Performance: 70.71% accuracy on RAVDESS test set
+   - Features: Face detection, automatic cropping, grayscale conversion
 
-### 3. Vision Sentiment Analysis
+3. **Attention-Based Fusion**
+   - Architecture: Custom AttentionFusionModel with Softmax-normalized attention weights
+   - Performance: 92.31% accuracy on RAVDESS test set (4.17% improvement over feature concatenation)
+   - Features: Dynamic modality weighting, missing modality handling, interpretable attention weights
 
-- **Model**: Fine-tuned ResNet-50 model
-- **Training Data**: FER2013 facial expression dataset
-- **Capability**: Analyzes images for facial expression-based sentiment
-- **Features**:
-  - File upload support (PNG, JPG, JPEG, BMP, TIFF)
-  - Camera capture functionality
-  - Automatic face detection and preprocessing
-  - Grayscale conversion and 224x224 resize
-- **Status**: ✅ Fully integrated and ready to use
+### Web Application
 
-### 4. Fused Model
-
-- **Approach**: Combines predictions from all three models
-- **Capability**: Provides comprehensive sentiment analysis across modalities
-- **Status**: ✅ Fully integrated and ready to use
-
-### 5. 🎬 Max Fusion
-
-- **Approach**: Video-based comprehensive sentiment analysis
-- **Capability**: Analyzes 5-second videos by extracting frames, audio, and transcribing speech
-- **Features**:
-  - Video recording or file upload (MP4, AVI, MOV, MKV, WMV, FLV)
-  - Automatic frame extraction for vision analysis
-  - Audio extraction for vocal sentiment analysis
-  - Speech-to-text transcription for text sentiment analysis
-  - Combined results from all three modalities
-- **Status**: ✅ Fully integrated and ready to use
+- **Multiple Input Methods**: File upload, camera capture, microphone recording
+- **Real-time Inference**: Instant sentiment predictions with confidence scores
+- **Attention Visualization**: Display attention weights for interpretability
+- **Missing Modality Support**: Graceful degradation when one modality is unavailable
+- **Multi-page Interface**: Clean navigation between different analysis modes
 
 ## Project Structure
 
 ```
-sentiment-fused/
+multimodal-sentiment-analysis/
 ├── app.py                          # Main Streamlit application
-├── simple_model_manager.py         # Model management and Google Drive integration
 ├── requirements.txt                # Python dependencies
 ├── pyproject.toml                 # Project configuration
 ├── Dockerfile                     # Container deployment
-├── notebooks/                     # Development notebooks
-│   ├── audio_sentiment_analysis.ipynb    # Audio model development
-│   └── vision_sentiment_analysis.ipynb   # Vision model development
-├── model_weights/                 # Model storage directory (downloaded .pth files)
+├── README.md                      # This file
+├── notebooks/                     # Training and evaluation notebooks
+│   ├── audio_wav2vec2_training.ipynb           # Audio model training
+│   ├── vision_resnet50_training.ipynb          # Vision model training
+│   ├── late_fusion_attention_based.ipynb       # Attention fusion training
+│   ├── late_fusion_feature_concatenation.ipynb # Concatenation fusion baseline
+│   └── late_fusion_missing_modality_evaluation copy.ipynb  # Missing modality evaluation
+├── model_weights/                 # Model storage directory
 └── src/                           # Source code package
-    ├── __init__.py               # Package initialization
-    ├── config/                   # Configuration settings
-    ├── models/                   # Model logic and inference code
-    ├── utils/                    # Utility functions and preprocessing
-    └── ui/                       # User interface components
+    ├── __init__.py
+    ├── config/                    # Configuration settings
+    │   ├── __init__.py
+    │   └── settings.py
+    ├── models/                     # Model inference code
+    │   ├── __init__.py
+    │   ├── audio_model.py          # Wav2Vec2 audio model
+    │   ├── vision_model.py         # ResNet-50 vision model
+    │   ├── fused_model.py          # Attention-based fusion model
+    │   └── text_model.py           # Text sentiment model (TextBlob)
+    ├── utils/                      # Utility functions
+    │   ├── __init__.py
+    │   ├── preprocessing.py        # Data preprocessing utilities
+    │   ├── file_handling.py        # File I/O utilities
+    │   ├── sentiment_mapping.py    # Sentiment label mapping
+    │   └── simple_model_manager.py # Model loading and management
+    └── ui/                         # UI components
+        ├── __init__.py
+        └── styles.py               # Custom CSS styles
 ```
-
-## Key Features
-
-- **Real-time Analysis**: Instant sentiment predictions with confidence scores
-- **Smart Preprocessing**: Automatic file format handling and preprocessing
-- **Multi-Page Interface**: Clean navigation between different sentiment analysis modes
-- **Model Management**: Automatic model downloading from Google Drive
-- **File Support**: Multiple audio and image format support
-- **Camera & Microphone**: Direct input capture capabilities
-
-## Prerequisites
-
-- Python 3.9 or higher
-- 4GB+ RAM (for model loading)
-- Internet connection (for initial model download)
 
 ## Installation
 
-1. **Clone the repository**:
+### Prerequisites
 
+- Python 3.9 or higher
+- 4GB+ RAM (for model loading)
+- CUDA-capable GPU (optional, for faster inference)
+
+### Setup
+
+1. **Clone the repository**:
    ```bash
-   git clone <your-repo-url>
-   cd sentiment-fused
+   git clone <repository-url>
+   cd multimodal-sentiment-analysis
    ```
 
-2. **Create a virtual environment** (recommended):
-
+2. **Create a virtual environment**:
    ```bash
    python -m venv venv
-
+   
    # On Windows
    venv\Scripts\activate
-
+   
    # On macOS/Linux
    source venv/bin/activate
    ```
 
 3. **Install dependencies**:
-
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Set up environment variables**:
-   Create a `.env` file in the project root with:
-   ```env
-   VISION_MODEL_DRIVE_ID=your_google_drive_vision_model_file_id_here
-   AUDIO_MODEL_DRIVE_ID=your_google_drive_audio_model_file_id_here
-   VISION_MODEL_FILENAME=resnet50_model.pth
-   AUDIO_MODEL_FILENAME=wav2vec2_model.pth
-   ```
+4. **Set up model files**:
+   
+   Place the trained model files in the following locations:
+   - Audio model: `notebooks/best_wav2vec2_two_stage.pth`
+   - Vision model: `model_weights/resnet50_fer2013_sentiment.pth` or `notebooks/resnet50_fer2013_sentiment.pth`
+   - Fusion model: `notebooks/best_attention_fusion_model.pth`
+   
+   The application will automatically load models from these local paths. Ensure all model files are present before running the application.
 
-## Running Locally
+## Usage
+
+### Running the Web Application
 
 1. **Start the Streamlit application**:
-
    ```bash
    streamlit run app.py
    ```
 
-2. **Open your browser** and navigate to the URL shown in the terminal (usually `http://localhost:8501`)
+2. **Open your browser** and navigate to `http://localhost:8501`
 
 3. **Navigate between pages** using the sidebar:
-   - 🏠 **Home**: Overview and welcome page
+   - 🏠 **Home**: Overview and model information
    - 📝 **Text Sentiment**: Analyze text with TextBlob
    - 🎵 **Audio Sentiment**: Analyze audio files or record with microphone
    - 🖼️ **Vision Sentiment**: Analyze images or capture with camera
-   - 🔗 **Fused Model**: Combine all three models
-   - 🎬 **Max Fusion**: Video-based comprehensive analysis
+   - 🔗 **Fused Model**: Combine audio and vision models
+   - 🎬 **Attention Based Fusion (Video)**: Video-based analysis with attention fusion
 
-## Model Development
+### Input Methods
 
-The project includes Jupyter notebooks that document the development process:
+- **File Upload**: Support for audio (WAV, MP3, M4A, FLAC), images (PNG, JPG, JPEG, BMP, TIFF), and videos (MP4, AVI, MOV, MKV, WMV, FLV)
+- **Camera Capture**: Direct image capture for vision analysis
+- **Microphone Recording**: Real-time audio recording (max 5 seconds)
 
-### Audio Model (`notebooks/audio_sentiment_analysis.ipynb`)
+## Model Architecture
 
-- Wav2Vec2-base fine-tuning on RAVDESS + CREMA-D datasets
-- Emotion-to-sentiment mapping (happy/surprised → positive, sad/angry/fearful/disgust → negative, neutral/calm → neutral)
-- Audio preprocessing pipeline (16kHz sampling, 5s max duration)
+### Attention-Based Fusion Model
 
-### Vision Model (`notebooks/vision_sentiment_analysis.ipynb`)
+The fusion model uses a Softmax-normalized attention mechanism to dynamically weight audio and vision features:
 
-- ResNet-50 fine-tuning on FER2013 dataset
-- Emotion-to-sentiment mapping (happy/surprise → positive, angry/disgust/fear/sad → negative, neutral → neutral)
-- Image preprocessing pipeline (face detection, grayscale conversion, 224x224 resize)
+```python
+# Project modalities to shared dimension
+audio_proj = Linear(audio_dim, hidden_dim)  # 256 → 256
+vision_proj = Linear(vision_dim, hidden_dim)  # 2048 → 256
 
-## Technical Implementation
+# Compute attention weights
+concat_features = Concat([vision_proj, audio_proj])  # [batch, 512]
+attention_weights = Softmax(Linear(Tanh(Linear(concat_features))))  # [batch, 2]
 
-### Model Management
+# Weighted fusion
+fused_features = vision_proj * attention_weights[:, 0] + audio_proj * attention_weights[:, 1]
 
-- `SimpleModelManager` class handles model downloading from Google Drive
-- Automatic model caching and version management
-- Environment variable configuration for model URLs
+# Classification
+logits = MLP(fused_features)  # 3-layer MLP: 256 → 256 → 128 → 3
+```
 
-### Preprocessing Pipelines
+**Key Features**:
+- Softmax normalization ensures attention weights sum to 1
+- Handles missing modalities by setting features to zero
+- Provides interpretable attention weights for each modality
 
-- **Audio**: Automatic resampling, duration limiting, feature extraction
-- **Vision**: Face detection, cropping, grayscale conversion, normalization
-- **Text**: Direct TextBlob processing
+## Training Details
 
-### Streamlit Integration
+### Audio Model (Wav2Vec2)
 
-- Multi-page application with sidebar navigation
-- File upload widgets with format validation
-- Real-time camera and microphone input
-- Custom CSS styling for modern UI
+- **Pre-training**: `facebook/wav2vec2-base` (self-supervised on 960h of LibriSpeech)
+- **Fine-tuning Strategy**: Two-stage approach
+  - Stage 1: Freeze backbone, train classifier (5 epochs, lr=3e-4)
+  - Stage 2: Unfreeze with layer-specific learning rates (15 epochs)
+    - Feature extractor: 0.0 (frozen)
+    - Encoder: 1e-5
+    - Feature projection: 1e-5
+    - Classifier: 5e-4
+- **Data Augmentation**: Noise addition, random volume, time stretching
+- **Regularization**: Weight decay (0.01), gradient clipping, class weighting
+
+### Vision Model (ResNet-50)
+
+- **Pre-training**: ImageNet-1K V2 weights
+- **Fine-tuning Strategy**: End-to-end training (all layers trainable)
+- **Data Augmentation**: RandomCrop, RandomHorizontalFlip, RandAugment, RandomErasing
+- **Regularization**: Label smoothing (0.1), weight decay (1e-4), dropout, early stopping
+
+### Fusion Model
+
+- **Training**: Feature-level fusion with frozen single-modal models
+- **Optimization**: AdamW optimizer, cosine annealing LR scheduler with warmup
+- **Regularization**: Dropout (0.5), BatchNorm, weight decay
+- **Evaluation**: Speaker-independent split (actors 1-18 train, 19-21 val, 22-24 test)
+
+## Experimental Results
+
+### Performance on RAVDESS Dataset
+
+| Model | Accuracy | F1-Score (Macro) | Precision | Recall |
+|-------|----------|------------------|-----------|--------|
+| Audio (Wav2Vec2) | 79.17% | 0.7845 | 0.7891 | 0.7812 |
+| Vision (ResNet-50) | 70.71% | 0.7012 | 0.7089 | 0.6934 |
+| Feature Concatenation | 88.14% | 0.8541 | 0.8612 | 0.8473 |
+| **Attention-Based Fusion** | **92.31%** | **0.9073** | **0.9124** | **0.9021** |
+
+### Missing Modality Analysis
+
+| Scenario | Accuracy | F1-Score |
+|----------|----------|----------|
+| Full Fusion (Audio + Vision) | 92.31% | 0.9073 |
+| Audio-Only (Vision set to zero) | 68.31% | 0.6712 |
+| Vision-Only (Audio set to zero) | 78.49% | 0.7745 |
+
+## Technical Details
+
+### Data Preprocessing
+
+**Audio**:
+- Resampling to 16kHz
+- Max duration: 5 seconds
+- Silence trimming (top_db=30)
+- Feature extraction via AutoFeatureExtractor
+
+**Vision**:
+- Face detection using OpenCV Haar Cascade
+- Face cropping with configurable padding
+- Grayscale conversion
+- Resize to 224×224
+- ImageNet normalization
+
+### Data Split Strategy
+
+To prevent data leakage, the dataset is split by actor ID (speaker-independent):
+- **Training**: Actors 1-18 (1828 samples)
+- **Validation**: Actors 19-21 (312 samples)
+- **Test**: Actors 22-24 (312 samples)
+
+This ensures no actor appears in multiple splits, preventing the model from memorizing actor-specific characteristics.
+
+## Dependencies
+
+Key libraries:
+
+- **Streamlit**: Web application framework
+- **PyTorch**: Deep learning framework
+- **Transformers**: Hugging Face model library (Wav2Vec2)
+- **Torchvision**: Computer vision models (ResNet-50)
+- **OpenCV**: Face detection and image processing
+- **Librosa**: Audio processing and feature extraction
+- **MoviePy**: Video processing and audio extraction
+- **Pillow**: Image processing
+- **NumPy/Pandas**: Data manipulation
+
+See `requirements.txt` for the complete list.
 
 ## Deployment
 
@@ -199,17 +266,11 @@ The project includes Jupyter notebooks that document the development process:
 
 ```bash
 # Build the container
-docker build -t sentiment-fused .
+docker build -t multimodal-sentiment-analysis .
 
 # Run the container
-doc
-
-Uploading multimodal-sentiment-analysis-video-demo.mp4…
-
-ker run -p 7860:7860 sentiment-fused
+docker run -p 8501:8501 multimodal-sentiment-analysis
 ```
-
-The application will be available at `http://localhost:7860`
 
 ### Local Development
 
@@ -226,67 +287,43 @@ streamlit run app.py --server.address 0.0.0.0
 ### Common Issues
 
 1. **Model Loading Errors**:
-
-   - Ensure environment variables are set correctly
-   - Check internet connection for model downloads
+   - Ensure model files are in the correct locations
+   - Check file permissions
    - Verify sufficient RAM (4GB+ recommended)
 
-2. **Dependency Issues**:
+2. **CUDA/GPU Issues**:
+   - Install PyTorch with CUDA support: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118`
+   - Models will fall back to CPU if CUDA is unavailable
 
-   - Use virtual environment to avoid conflicts
-   - Install PyTorch with CUDA support if using GPU
-   - Ensure OpenCV is properly installed for face detection
+3. **Dependency Conflicts**:
+   - Use a virtual environment
+   - Ensure Python version is 3.9+
 
-3. **Performance Issues**:
-   - Large audio/image files may cause memory issues
-   - Consider file size limits for better performance
-   - GPU acceleration available for PyTorch models
+4. **Face Detection Fails**:
+   - Ensure OpenCV is properly installed: `pip install opencv-python-headless`
+   - The system will use center crop as fallback
 
-### Model Testing
+## Citation
 
-```bash
-# Test vision model
-python -c "from simple_model_manager import SimpleModelManager; m = SimpleModelManager(); print('Vision model:', m.load_vision_model()[0] is not None)"
+If you use this code or models in your research, please cite:
 
-# Test audio model
-python -c "from simple_model_manager import SimpleModelManager; m = SimpleModelManager(); print('Audio model:', m.load_audio_model()[0] is not None)"
+```bibtex
+@misc{multimodal-sentiment-analysis,
+  title={Multimodal Sentiment Analysis with Attention-Based Fusion},
+  author={Your Name},
+  year={2024},
+  howpublished={\url{https://github.com/yourusername/multimodal-sentiment-analysis}}
+}
 ```
 
-## Dependencies
+## License
 
-Key libraries used:
+[Specify your license here]
 
-- **Streamlit**: Web application framework
-- **PyTorch**: Deep learning framework
-- **Transformers**: Hugging Face model library
-- **OpenCV**: Computer vision and face detection
-- **Librosa**: Audio processing
-- **TextBlob**: Natural language processing
-- **Gdown**: Google Drive file downloader
-- **MoviePy**: Video processing and audio extraction
-- **SpeechRecognition**: Audio transcription
+## Acknowledgments
 
-## What This Project Demonstrates
+We thank the creators of the RAVDESS dataset for providing a comprehensive multimodal emotion recognition benchmark. We also acknowledge the open-source community for providing pre-trained models (Wav2Vec2 and ResNet-50) and frameworks (PyTorch, Transformers, Streamlit) that enabled this research.
 
-1. **Multimodal AI Integration**: Combining text, audio, and vision models
-2. **Model Management**: Automated downloading and caching of pre-trained models
-3. **Real-time Processing**: Live audio recording and camera capture
-4. **Smart Preprocessing**: Automatic format conversion and optimization
-5. **Modern Web UI**: Professional Streamlit application with custom styling
-6. **Production Ready**: Docker containerization and deployment
-7. **Video Analysis**: Comprehensive video processing with multi-modal extraction
-8. **Speech Recognition**: Audio-to-text transcription for enhanced analysis
-9. **Modular Architecture**: Clean, maintainable code structure with separated concerns
-10. **Professional Code Organization**: Proper Python packaging with config, models, utils, and UI modules
+## Contact
 
-## Recent Improvements
-
-The project has been refactored from a monolithic structure to a clean, modular architecture:
-
-- **Modular Design**: Separated into logical modules (`src/config/`, `src/models/`, `src/utils/`, `src/ui/`)
-- **Centralized Configuration**: All settings consolidated in `src/config/settings.py`
-- **Clean Separation**: Model logic, preprocessing, and UI components are now in dedicated modules
-- **Better Maintainability**: Easier to modify, test, and extend individual components
-- **Professional Structure**: Follows Python packaging best practices
-
-This project serves as a comprehensive example of building production-ready multimodal AI applications with modern Python tools and frameworks.
+For questions or issues, please open an issue on GitHub or contact [your-email@example.com].

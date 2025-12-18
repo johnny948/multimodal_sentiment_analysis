@@ -14,6 +14,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Get project root directory (assuming this file is in src/utils/)
+# Go up from src/utils/ to project root
+_current_file = Path(__file__).resolve()
+PROJECT_ROOT = _current_file.parent.parent.parent
+
 
 class SimpleModelManager:
     """Simple model manager that downloads models from Google Drive using gdown"""
@@ -58,9 +63,9 @@ class SimpleModelManager:
             missing_vars.append("AUDIO_MODEL_DRIVE_ID")
 
         if missing_vars:
-            logger.warning(f"Missing environment variables: {', '.join(missing_vars)}")
-            logger.warning("Please set these in your .env file or environment")
-            logger.warning("Models will not be available until these are configured")
+            logger.info("Loading models from local paths:")
+            logger.info(f"  - {PROJECT_ROOT / 'notebooks' / 'best_wav2vec2_two_stage.pth'} (audio)")
+            logger.info(f"  - {PROJECT_ROOT / 'model_weights' / 'resnet50_fer2013_sentiment.pth'} (vision)")
 
     def download_from_google_drive(self, share_url: str, filename: str) -> str:
         """
@@ -110,19 +115,30 @@ class SimpleModelManager:
             raise
 
     def load_vision_model(self) -> Tuple[Any, torch.device, int]:
-        """Load vision sentiment model"""
+        """Load vision sentiment model from local paths"""
         try:
-            model_info = self.model_links["vision"]
+            # Try local paths in order of preference (based on project root)
+            local_paths = [
+                PROJECT_ROOT / "model_weights" / "resnet50_fer2013_sentiment.pth",
+                PROJECT_ROOT / "notebooks" / "resnet50_fer2013_sentiment.pth",
+            ]
+            
+            model_path = None
+            for local_path in local_paths:
+                if local_path.exists():
+                    model_path = str(local_path)
+                    logger.info(f"Using local vision model file: {model_path}")
+                    break
+            
+            if not model_path or not Path(model_path).exists():
+                raise FileNotFoundError(
+                    f"Vision model not found. Tried:\n"
+                    f"  - {PROJECT_ROOT / 'model_weights' / 'resnet50_fer2013_sentiment.pth'}\n"
+                    f"  - {PROJECT_ROOT / 'notebooks' / 'resnet50_fer2013_sentiment.pth'}\n"
+                    f"Please ensure the model file exists in one of these locations."
+                )
 
-            # Check if URL is configured
-            if not model_info["url"]:
-                raise ValueError("VISION_MODEL_DRIVE_ID environment variable not set")
-
-            model_path = self.download_from_google_drive(
-                model_info["url"], model_info["filename"]
-            )
-
-            # Validate the downloaded file
+            # Validate the model file
             if not Path(model_path).exists():
                 raise FileNotFoundError(f"Model file not found at {model_path}")
 
@@ -199,19 +215,30 @@ class SimpleModelManager:
             raise
 
     def load_audio_model(self) -> Tuple[Any, torch.device]:
-        """Load audio sentiment model"""
+        """Load audio sentiment model from local paths"""
         try:
-            model_info = self.model_links["audio"]
+            # Try local paths in order of preference (based on project root)
+            local_paths = [
+                PROJECT_ROOT / "notebooks" / "best_wav2vec2_two_stage.pth",
+                PROJECT_ROOT / "model_weights" / "best_wav2vec2_two_stage.pth",
+            ]
+            
+            model_path = None
+            for local_path in local_paths:
+                if local_path.exists():
+                    model_path = str(local_path)
+                    logger.info(f"Using local audio model file: {model_path}")
+                    break
+            
+            if not model_path or not Path(model_path).exists():
+                raise FileNotFoundError(
+                    f"Audio model not found. Tried:\n"
+                    f"  - {PROJECT_ROOT / 'notebooks' / 'best_wav2vec2_two_stage.pth'}\n"
+                    f"  - {PROJECT_ROOT / 'model_weights' / 'best_wav2vec2_two_stage.pth'}\n"
+                    f"Please ensure the model file exists in one of these locations."
+                )
 
-            # Check if URL is configured
-            if not model_info["url"]:
-                raise ValueError("AUDIO_MODEL_DRIVE_ID environment variable not set")
-
-            model_path = self.download_from_google_drive(
-                model_info["url"], model_info["filename"]
-            )
-
-            # Validate the downloaded file
+            # Validate the model file
             if not Path(model_path).exists():
                 raise FileNotFoundError(f"Model file not found at {model_path}")
 

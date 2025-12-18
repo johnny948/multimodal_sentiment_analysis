@@ -48,7 +48,6 @@ def load_vision_model():
             return None, None, None
 
         logger.info(f"Vision model loaded successfully with {num_classes} classes!")
-        st.success(f"Vision model loaded successfully with {num_classes} classes!")
         return model, device, num_classes
     except Exception as e:
         logger.error(f"Error loading vision model: {str(e)}")

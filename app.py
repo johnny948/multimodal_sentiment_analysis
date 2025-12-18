@@ -141,7 +141,7 @@ def render_home_page():
     st.markdown(
         """
         <div class="model-card">
-            <h3>🎬 Max Fusion</h3>
+            <h3>🎬 Attention-Based Fusion (Video)</h3>
             <p>Ultimate video-based sentiment analysis combining all three modalities</p>
             <ul>
                 <li>🎥 Record or upload 5-second videos</li>
@@ -529,8 +529,9 @@ def render_fused_model_page():
         """
         <div class="model-card">
             <h3>Multi-Modal Sentiment Analysis</h3>
-            <p>This page allows you to input text, audio, and/or image data to get a comprehensive sentiment analysis 
-            using all three models combined.</p>
+            <p>This page allows you to input audio and/or image data to get a comprehensive sentiment analysis using attention-based fusion.</p>
+            <p><strong>🎯 Attention-Based Fusion:</strong> The system uses a pre-trained attention-based fusion model (<code>best_attention_fusion_model.pth</code>) that learns optimal modality weights for better accuracy.</p>
+            <p><strong>📊 Missing Modalities:</strong> If only audio or only vision is provided, the missing modality is set to zero and the model automatically adjusts attention weights.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -540,13 +541,6 @@ def render_fused_model_page():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Text Input")
-        text_input = st.text_area(
-            "Enter text (optional):",
-            height=100,
-            placeholder="Type or paste your text here...",
-        )
-
         st.subheader("Audio Input")
 
         # Audio preprocessing information for fused model
@@ -637,21 +631,28 @@ def render_fused_model_page():
 
     # Analyze button
     if st.button("Run Fused Analysis", type="primary", use_container_width=True):
-        if text_input or uploaded_audio or uploaded_image:
+        if uploaded_audio or uploaded_image:
             with st.spinner("Running fused sentiment analysis..."):
                 # Prepare inputs
                 audio_bytes = uploaded_audio.getvalue() if uploaded_audio else None
                 image = Image.open(uploaded_image) if uploaded_image else None
 
-                # Get fused prediction
+                # Get fused prediction (attention fusion only uses audio and vision)
                 sentiment, confidence = predict_fused_sentiment(
-                    text=text_input if text_input else None,
                     audio_bytes=audio_bytes,
                     image=image,
                 )
 
                 # Display results
                 st.markdown("### Fused Model Results")
+                
+                # Show which fusion method was used
+                if uploaded_audio and uploaded_image:
+                    st.success("✅ Using Attention-Based Fusion (Audio + Vision)")
+                elif uploaded_audio:
+                    st.success("✅ Using Attention-Based Fusion (Audio only, Vision set to zero)")
+                elif uploaded_image:
+                    st.success("✅ Using Attention-Based Fusion (Vision only, Audio set to zero)")
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -663,17 +664,6 @@ def render_fused_model_page():
                 st.markdown("### Individual Model Results")
 
                 results_data = []
-
-                if text_input:
-                    text_sentiment, text_conf = predict_text_sentiment(text_input)
-                    results_data.append(
-                        {
-                            "Model": "Text (TextBlob)",
-                            "Input": f"Text: {text_input[:50]}...",
-                            "Sentiment": text_sentiment,
-                            "Confidence": f"{text_conf:.2f}",
-                        }
-                    )
 
                 if uploaded_audio:
                     audio_sentiment, audio_conf = predict_audio_sentiment(audio_bytes)
@@ -720,33 +710,34 @@ def render_fused_model_page():
                 )
         else:
             st.warning(
-                "Please provide at least one input (text, audio, or image) for fused analysis."
+                "Please provide at least one input (audio or image) for fused analysis."
             )
 
 
 def render_max_fusion_page():
-    """Render the max fusion page for video-based analysis."""
-    st.title("Max Fusion - Multi-Modal Sentiment Analysis")
+    """Render the attention-based fusion page for video-based analysis."""
+    st.title("Attention Based Fusion with Video Input")
     st.markdown(
         """
         <div class="model-card">
-            <h3>Ultimate Multi-Modal Sentiment Analysis</h3>
-            <p>Take photos with camera or upload videos to get comprehensive sentiment analysis from multiple modalities:</p>
+            <h3>Attention-Based Fusion for Video/Photo Analysis</h3>
+            <p>Upload videos or take photos to get comprehensive sentiment analysis using attention-based fusion:</p>
             <ul>
-                <li>📸 <strong>Vision Analysis:</strong> Camera photos or video frames for facial expression analysis</li>
-                <li>🎵 <strong>Audio Analysis:</strong> Audio files or extracted audio from videos for vocal sentiment</li>
-                <li>📝 <strong>Text Analysis:</strong> Transcribed audio for text sentiment analysis</li>
+                <li>📸 <strong>Vision Analysis:</strong> Video frames or photos for facial expression analysis</li>
+                <li>🎵 <strong>Audio Analysis:</strong> Extracted audio from videos or uploaded audio files for vocal sentiment</li>
             </ul>
+            <p><strong>🎯 Attention-Based Fusion:</strong> The system uses a pre-trained attention-based fusion model (<code>best_attention_fusion_model.pth</code>) that learns optimal modality weights for better accuracy.</p>
+            <p><strong>📷 Camera Feature:</strong> Take a photo with your camera and optionally upload an audio file for combined analysis!</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     # Video input method selection
-    st.subheader("Video Input")
+    st.subheader("Input Method")
     video_input_method = st.radio(
         "Choose input method:",
-        ["Upload Video File", "Record Video (Coming Soon)"],
+        ["Upload Video File", "Use Camera", "Record Video (Coming Soon)"],
         horizontal=True,
         index=0,  # Default to upload video
     )
@@ -754,7 +745,7 @@ def render_max_fusion_page():
     if video_input_method == "Record Video (Coming Soon)":
         # Coming Soon message for video recording
         st.info("🎥 Video recording feature is coming soon!")
-        st.info("📁 Please use the Upload Video File option for now.")
+        st.info("📁 Please use the Upload Video File or Use Camera option for now.")
 
         # Show a nice coming soon message
         st.markdown("---")
@@ -765,7 +756,7 @@ def render_max_fusion_page():
                 <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
                     <h3>🚧 Coming Soon 🚧</h3>
                     <p>Video recording feature is under development</p>
-                    <p>Use Upload Video File for now!</p>
+                    <p>Use Upload Video File or Use Camera for now!</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -788,6 +779,46 @@ def render_max_fusion_page():
         video_source = None
         video_name = None
         video_file = None
+        camera_photo = None
+
+    elif video_input_method == "Use Camera":
+        # Camera photo option
+        st.markdown(
+            """
+            <div class="upload-section">
+                <h4>📸 Use Camera</h4>
+                <p>Take a photo with your camera for vision sentiment analysis.</p>
+                <p><strong>Note:</strong> You can optionally upload an audio file to combine with the photo for comprehensive analysis.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Camera input
+        camera_photo = st.camera_input(
+            "Take a photo",
+            help="Click the camera button to take a photo for sentiment analysis",
+        )
+
+        if camera_photo:
+            # Display captured image
+            image = Image.open(camera_photo)
+            st.image(
+                image,
+                caption="Captured Photo",
+                use_container_width=True,
+            )
+            st.success("✅ Photo captured successfully!")
+            video_source = "camera_photo"
+            video_name = "Camera Photo"
+            video_file = camera_photo
+            uploaded_video = None
+        else:
+            video_source = None
+            video_name = None
+            video_file = None
+            uploaded_video = None
+            camera_photo = None
 
     elif video_input_method == "Upload Video File":
         # File upload option
@@ -812,21 +843,22 @@ def render_max_fusion_page():
         video_source = "uploaded_file"
         video_name = uploaded_video.name if uploaded_video else None
         video_file = uploaded_video
+        camera_photo = None
 
-    if video_file is not None:
+    if video_file is not None or camera_photo is not None:
         # Display video or photo
         if video_source == "camera_photo":
             # For camera photos, we already displayed the image above
             st.info(f"Source: Camera Photo | Ready for vision analysis")
 
             # Add audio upload option for camera photo mode
-            st.subheader("🎵 Audio Input for Analysis")
+            st.subheader("🎵 Audio Input for Analysis (Optional)")
             st.info(
-                "Since we're using a photo, please upload an audio file for audio sentiment analysis:"
+                "You can optionally upload an audio file to combine with the photo for comprehensive analysis. If no audio is provided, only vision analysis will be performed."
             )
 
             uploaded_audio = st.file_uploader(
-                "Upload audio file for audio analysis:",
+                "Upload audio file for audio analysis (optional):",
                 type=SUPPORTED_AUDIO_FORMATS,
                 key="camera_audio",
                 help="Upload an audio file to complement the photo analysis",
@@ -840,7 +872,7 @@ def render_max_fusion_page():
                 audio_bytes = uploaded_audio.getvalue()
             else:
                 audio_bytes = None
-                st.warning("⚠️ Please upload an audio file for complete analysis")
+                st.info("ℹ️ No audio provided. Analysis will use vision only.")
 
         else:
             # For uploaded videos
@@ -851,16 +883,26 @@ def render_max_fusion_page():
             )
             audio_bytes = None  # Will be extracted from video
 
-        # Video Processing Pipeline
-        st.subheader("🎬 Video Processing Pipeline")
+        # Processing Pipeline
+        st.subheader("🎬 Processing Pipeline")
 
         # Initialize variables
         frames = []
-        audio_bytes = None
-        transcribed_text = ""
+        image_for_fusion = None
+
+        # Process camera photo
+        if camera_photo:
+            st.info("📸 Processing camera photo...")
+            image = Image.open(camera_photo)
+            image_for_fusion = image
+            frames = [image]  # Use the photo as the frame for display
+            st.success("✅ Photo processed successfully")
+            
+            # Display the photo
+            st.image(image, caption="Photo for Analysis", use_container_width=True)
 
         # Process uploaded video
-        if uploaded_video:
+        elif uploaded_video:
             st.info("📁 Processing uploaded video file...")
 
             # Extract frames
@@ -892,94 +934,28 @@ def render_max_fusion_page():
                 st.warning("⚠️ Could not extract audio from video")
                 audio_bytes = None
 
-            # Transcribe audio
-            st.markdown("**3. 📝 Audio Transcription**")
-            if audio_bytes:
-                transcribed_text = transcribe_audio(audio_bytes)
-                if transcribed_text:
-                    st.success("✅ Audio transcribed successfully")
-                    st.markdown(f'**Transcribed Text:** "{transcribed_text}"')
-                else:
-                    st.warning("⚠️ Could not transcribe audio")
-                    transcribed_text = ""
-            else:
-                transcribed_text = ""
-                st.info("ℹ️ No audio available for transcription")
+            # Skip transcription (not needed for attention fusion)
 
         # Analysis button
         if st.button(
-            "🚀 Run Max Fusion Analysis", type="primary", use_container_width=True
+            "🚀 Run Attention-Based Fusion Analysis", type="primary", use_container_width=True
         ):
-            with st.spinner(
-                "🔄 Processing video and running comprehensive analysis..."
-            ):
-                # Run individual analyses
-                st.subheader("🔍 Individual Model Analysis")
+            # Determine processing message
+            if camera_photo:
+                processing_msg = "🔄 Processing photo and running attention-based fusion analysis..."
+            else:
+                processing_msg = "🔄 Processing video and running attention-based fusion analysis..."
+            
+            with st.spinner(processing_msg):
+                # Run fused analysis directly (no individual model results shown)
+                st.subheader("🎯 Attention-Based Fusion Results")
 
-                results_data = []
-
-                # Vision analysis (use first frame for uploaded videos)
-                if frames:
-                    st.markdown("**Vision Analysis:**")
-
-                    # For uploaded videos, use first frame
-                    vision_sentiment, vision_conf = predict_vision_sentiment(
-                        frames[0], crop_tightness=0.0
-                    )
-                    results_data.append(
-                        {
-                            "Model": "Vision (ResNet-50)",
-                            "Input": f"Video Frame 1",
-                            "Sentiment": vision_sentiment,
-                            "Confidence": f"{vision_conf:.2f}",
-                        }
-                    )
-                    st.success(
-                        f"Vision: {vision_sentiment} (Confidence: {vision_conf:.2f})"
-                    )
-
-                # Audio analysis
-                if audio_bytes:
-                    st.markdown("**Audio Analysis:**")
-                    audio_sentiment, audio_conf = predict_audio_sentiment(audio_bytes)
-                    results_data.append(
-                        {
-                            "Model": "Audio (Wav2Vec2)",
-                            "Input": f"Video Audio",
-                            "Sentiment": audio_sentiment,
-                            "Confidence": f"{audio_conf:.2f}",
-                        }
-                    )
-                    st.success(
-                        f"Audio: {audio_sentiment} (Confidence: {audio_conf:.2f})"
-                    )
-
-                # Text analysis
-                if transcribed_text:
-                    st.markdown("**Text Analysis:**")
-                    text_sentiment, text_conf = predict_text_sentiment(transcribed_text)
-                    results_data.append(
-                        {
-                            "Model": "Text (TextBlob)",
-                            "Input": f"Transcribed: {transcribed_text[:50]}...",
-                            "Sentiment": text_sentiment,
-                            "Confidence": f"{text_conf:.2f}",
-                        }
-                    )
-                    st.success(f"Text: {text_sentiment} (Confidence: {text_conf:.2f})")
-
-                # Run fused analysis
-                st.subheader("🎯 Max Fusion Results")
-
-                if results_data:
-                    # Display results table
-                    df = pd.DataFrame(results_data)
-                    st.dataframe(df, use_container_width=True)
-
-                    # Calculate fused sentiment
-                    image_for_fusion = frames[0] if frames else None
+                # Calculate fused sentiment (attention fusion only uses audio and vision)
+                if not image_for_fusion and frames:
+                    image_for_fusion = frames[0]
+                
+                if audio_bytes or image_for_fusion:
                     sentiment, confidence = predict_fused_sentiment(
-                        text=transcribed_text if transcribed_text else None,
                         audio_bytes=audio_bytes,
                         image=image_for_fusion,
                     )
@@ -995,30 +971,38 @@ def render_max_fusion_page():
                     sentiment_colors = get_sentiment_colors()
                     emoji = sentiment_colors.get(sentiment, "❓")
 
+                    # Count modalities used
+                    modalities_count = sum([1 if audio_bytes else 0, 1 if image_for_fusion else 0])
+
+                    # Determine source name
+                    source_name = video_name if video_name else "Camera Photo"
+
                     st.markdown(
                         f"""
                         <div class="result-box">
-                            <h4>{emoji} Max Fusion Sentiment: {sentiment}</h4>
+                            <h4>{emoji} Attention-Based Fusion Sentiment: {sentiment}</h4>
                             <p><strong>Overall Confidence:</strong> {confidence:.2f}</p>
-                            <p><strong>Modalities Analyzed:</strong> {len(results_data)}</p>
-                            <p><strong>Video Source:</strong> {video_name}</p>
-                            <p><strong>Analysis Type:</strong> Comprehensive Multi-Modal Sentiment Analysis</p>
+                            <p><strong>Modalities Analyzed:</strong> {modalities_count}</p>
+                            <p><strong>Source:</strong> {source_name}</p>
+                            <p><strong>Analysis Type:</strong> Attention-Based Fusion (Audio + Vision)</p>
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
                 else:
                     st.error(
-                        "❌ No analysis could be performed. Please check your video input."
+                        "❌ No analysis could be performed. Please check your input."
                     )
 
     else:
         if video_input_method == "Record Video (Coming Soon)":
             st.info(
-                "🎥 Video recording feature is coming soon! Please use Upload Video File for now."
+                "🎥 Video recording feature is coming soon! Please use Upload Video File or Use Camera for now."
             )
+        elif video_input_method == "Use Camera":
+            st.info("📸 Please take a photo with your camera to begin Attention-Based Fusion analysis.")
         else:
-            st.info("📁 Please upload a video file to begin Max Fusion analysis.")
+            st.info("📁 Please upload a video file to begin Attention-Based Fusion analysis.")
 
 
 def main():
@@ -1036,7 +1020,7 @@ def main():
             "Audio Sentiment",
             "Vision Sentiment",
             "Fused Model",
-            "Max Fusion",
+            "Attention Based Fusion (Video)",
         ],
     )
 
@@ -1051,7 +1035,7 @@ def main():
         render_vision_sentiment_page()
     elif page == "Fused Model":
         render_fused_model_page()
-    elif page == "Max Fusion":
+    elif page == "Attention Based Fusion (Video)":
         render_max_fusion_page()
 
     # Footer
