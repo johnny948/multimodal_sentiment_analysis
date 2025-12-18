@@ -316,10 +316,6 @@ If you use this code or models in your research, please cite:
 }
 ```
 
-## License
-
-[Specify your license here]
-
 ## Acknowledgments
 
 We thank the creators of the RAVDESS dataset for providing a comprehensive multimodal emotion recognition benchmark. We also acknowledge the open-source community for providing pre-trained models (Wav2Vec2 and ResNet-50) and frameworks (PyTorch, Transformers, Streamlit) that enabled this research.
